@@ -1,3 +1,6 @@
+require('dotenv').config()
+
+
 module.exports = {
   siteMetadata: {
     title: "fresh-frontend",

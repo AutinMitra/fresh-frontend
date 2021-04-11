@@ -5,7 +5,7 @@ import { Fragment } from 'react'
 const label2color = {
   'plastic bag': '#276FBF',
   'bottle cap': '#F03A47',
-  'bottle': '#9AE5E6',
+  'bottle': '#AFA060',
   'cup': '#A53F2B',
   'plate': '#C179B9'
 }
@@ -18,8 +18,6 @@ for (let i = 0; i < 1000; i++)
 const baseURL = 'http://localhost:8080/'
 
 const Marker = ({ lat, long, id, label, clusterID, imagePath }) => {
-  console.log(baseURL + imagePath)
-
   return (
     <Fragment>
       <Box

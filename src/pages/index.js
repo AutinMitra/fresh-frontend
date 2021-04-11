@@ -15,7 +15,7 @@ import {
 } from 'theme-ui'
 import { getData, getClustering } from '../services/api'
 import Marker from '../components/marker'
-
+import key from '../../key'
 
 const AlgoBox = ({ onAlgoChange = () => {}, ...props }) => {
   const [algo, setCurrentAlgo] = useState('DBSCAN')
@@ -290,6 +290,7 @@ const SideBar = ({onApplyAlgorithm = () => {}, onTrashFilterChange = () => {}, f
         height: '100%',
         width: ['50%', '40%', '25%'],
         padding: 5,
+        bg: "#f8f9fa"
       }}
       {...props}
     >
@@ -353,7 +354,7 @@ const IndexPage = () => {
       <SideBar filter={filter} onTrashFilterChange={setFilter} onApplyAlgorithm={setClusters} />
       <Box sx={{ height: '100%', width: '100%' }}>
         {!!coords && <GoogleMapReact
-          // bootstrapURLKeys={{ key: /* YOUR KEY HERE */ }}
+          bootstrapURLKeys={{ key }}
           center={center}
           defaultZoom={18}
         >
