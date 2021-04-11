@@ -13,30 +13,9 @@ import {
   Checkbox,
   Button,
 } from 'theme-ui'
-import { getData } from '../services/api'
+import { getData, getClustering } from '../services/api'
+import Marker from '../components/marker'
 
-const Marker = ({ lat, long, id }) => {
-  return (
-    <Box
-      lat={lat}
-      lng={long}
-      id={id}
-      style={{
-        width: '12px',
-        height: '12px',
-        borderRadius: '12px',
-        background: '#F00',
-        left: '50%',
-        transform: 'translate(-50%, 0)',
-        position: 'absolute',
-        cursor: 'pointer',
-        '&:hover': {
-          background: '#0F0',
-        },
-      }}
-    ></Box>
-  )
-}
 
 const AlgoBox = ({ onAlgoChange = () => {}, ...props }) => {
   const [algo, setCurrentAlgo] = useState('DBSCAN')
@@ -118,11 +97,16 @@ const AlgoBox = ({ onAlgoChange = () => {}, ...props }) => {
 }
 
 const ArgumentBox = ({
+  algoArgs,
   onArgumentChange = () => {},
   algo = 'DBSCAN',
   ...props
 }) => {
-  const [args, setArgs] = useState(algo === 'KMEANS' ? [3] : [6, 2])
+  const [args, setArgs] = useState(algoArgs)
+
+  useEffect(() => {
+    setArgs(algoArgs)
+  }, [algoArgs])
 
   const setCurrentArgs = useCallback(
     (e, i) => {
@@ -169,7 +153,7 @@ const ArgumentBox = ({
               <Input
                 name='radius'
                 type='number'
-                defaultValue='6'
+                value={args[0]}
                 onChange={(e) => {
                   setCurrentArgs(e, 0)
                 }}
@@ -178,7 +162,7 @@ const ArgumentBox = ({
               <Input
                 name='neighbors'
                 type='number'
-                defaultValue='2'
+                value={args[1]}
                 onChange={(e) => {
                   setCurrentArgs(e, 1)
                 }}
@@ -191,7 +175,7 @@ const ArgumentBox = ({
               <Input
                 name='clusters'
                 type='number'
-                defaultValue='2'
+                value={args[0]}
                 onChange={(e) => {
                   setCurrentArgs(e, 0)
                 }}
@@ -205,6 +189,7 @@ const ArgumentBox = ({
 }
 
 const filterList = ['Plastic Bag', 'Bottlecap', 'Bottle', 'Cup', 'Plate']
+const filterListToInd = {'plastic bag': 0, 'bottlecap': 1, 'bottle': 2, 'cup': 3, 'plate': 4}
 
 const TrashFilter = ({
   trashFilter,
@@ -216,7 +201,7 @@ const TrashFilter = ({
   const toggleCheckBox = useCallback(
     (e, i) => {
       let nCheckBoxStates = [...checkBoxStates]
-      nCheckBoxStates[i] = e.target.value
+      nCheckBoxStates[i] = !checkBoxStates[i]
 
       onTrashFilterCallback(nCheckBoxStates)
       setCheckBoxStates(nCheckBoxStates)
@@ -271,10 +256,33 @@ const TrashFilter = ({
   )
 }
 
-const SideBar = () => {
+const SideBar = ({onApplyAlgorithm = () => {}, onTrashFilterChange = () => {}, filter, ...props}) => {
   const [algo, setAlgo] = useState('DBSCAN')
-  const [args, setArgs] = useState([6, 2])
-  const [trashFilter, setTrashFilter] = useState(new Array(filterList.length))
+  const [args, setArgs] = useState([0.0005, 1])
+  const [trashFilter, setTrashFilter] = useState(filter)
+
+  useEffect(() => {
+    setTrashFilter(filter)
+  }, [filter])  
+
+  const applyAlgorithm = useCallback(async () => {
+    let res = await getClustering(algo, args)
+    onApplyAlgorithm(res)
+  }, [algo, args])
+
+  const onAlgoChange = useCallback(async (algo) => {
+    if (algo === "KMEANS")
+      setArgs([3])
+    else
+      setArgs([0.0005, 1])
+    
+      setAlgo(algo)
+  }, [setArgs, setAlgo])
+
+  const applyTrashFilter = useCallback((filter) => {
+    setTrashFilter(filter)
+    onTrashFilterChange(filter)
+  }, [trashFilter, setTrashFilter])
 
   return (
     <Flex
@@ -283,6 +291,7 @@ const SideBar = () => {
         width: ['50%', '40%', '25%'],
         padding: 5,
       }}
+      {...props}
     >
       <Box sx={{ width: '100%' }}>
         <Heading
@@ -295,39 +304,41 @@ const SideBar = () => {
         >
           Fresh.
         </Heading>
-        <AlgoBox algo={algo} onAlgoChange={setAlgo} />
+        <AlgoBox algo={algo} onAlgoChange={onAlgoChange} />
         <ArgumentBox
           algo={algo}
-          args={args}
+          algoArgs={args}
           sx={{ mt: 3 }}
           onArgumentChange={setArgs}
         />
         <TrashFilter
           trashFilter={trashFilter}
           sx={{ mt: 3 }}
-          onTrashFilterCallback={setTrashFilter}
+          onTrashFilterCallback={applyTrashFilter}
         />
-        <Button sx={{ mt: 4, width: '100%' }} variant='secondary'>
+        <Button sx={{ mt: 4, width: '100%' }} variant='secondary' onClick={() => {applyAlgorithm()}}>
           Apply Algorithm
         </Button>
       </Box>
     </Flex>
   )
-}
+} 
 
 // markup
 const IndexPage = () => {
-  const [coords, setCoords] = useState([])
-  const [center, setCenter] = useState({ lat: 38.818, lng: -77.165 })
+  const [coords, setCoords] = useState(null)
+  const [center, setCenter] = useState(null)
+  const [clusters, setClusters] = useState(null)
+  const [filter, setFilter] = useState(new Array(filterList.length).fill(true))
 
   useEffect(() => {
     async function startup() {
       let res = await getData()
       setCoords(res.coords)
-      setCenter({ lat: res.centerLat, lng: res.centerLng })
+      setCenter([res.centerLat, res.centerLng])
     }
     startup()
-  }, [])
+  }, [setCoords, setCenter])
 
   return (
     <Flex
@@ -336,26 +347,40 @@ const IndexPage = () => {
         width: '100%',
         flexDirection: 'row',
         background: 'background',
-        margin: 0,
+        margin: 0, 
       }}
     >
-      <SideBar />
+      <SideBar filter={filter} onTrashFilterChange={setFilter} onApplyAlgorithm={setClusters} />
       <Box sx={{ height: '100%', width: '100%' }}>
-        <GoogleMapReact
+        {!!coords && <GoogleMapReact
           // bootstrapURLKeys={{ key: /* YOUR KEY HERE */ }}
           center={center}
-          defaultZoom={13}
+          defaultZoom={18}
         >
-          {!!coords &&
-            coords.map((obj, i) => (
+          {(!!coords && !clusters) && 
+            coords.filter((obj) => filter[filterListToInd[obj.label]]).map(({lat, lng, label, id, imagePath}, i) => (
               <Marker
                 key={i}
-                lat={obj.lat}
-                lng={obj.lng}
-                id={obj.label}
-              ></Marker>
+                lat={lat}
+                lng={lng}
+                label={label}
+                id={id}
+                imagePath={imagePath}
+              />
             ))}
-        </GoogleMapReact>
+            {!!clusters && 
+              clusters.filter((obj) => filter[filterListToInd[obj.label]]).map(({lat, lng, label, id, clusterID, imagePath}, i) => (
+                <Marker
+                  key={i}
+                  lat={lat}
+                  lng={lng}
+                  // label={label}
+                  id={id}
+                  clusterID={clusterID}
+                  imagePath={imagePath}
+                />
+            ))}
+        </GoogleMapReact>}
       </Box>
     </Flex>
   )
