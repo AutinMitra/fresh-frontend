@@ -13,9 +13,13 @@ import {
   Checkbox,
   Button,
 } from 'theme-ui'
+import {motion} from 'framer-motion'
+
+
 import { getData, getClustering } from '../services/api'
 import Marker from '../components/marker'
 import key from '../../key'
+import { fadeInUp, staggerAnimation } from '../animations/animations'
 
 const AlgoBox = ({ onAlgoChange = () => {}, ...props }) => {
   const [algo, setCurrentAlgo] = useState('DBSCAN')
@@ -189,7 +193,13 @@ const ArgumentBox = ({
 }
 
 const filterList = ['Plastic Bag', 'Bottlecap', 'Bottle', 'Cup', 'Plate']
-const filterListToInd = {'plastic bag': 0, 'bottlecap': 1, 'bottle': 2, 'cup': 3, 'plate': 4}
+const filterListToInd = {
+  'plastic bag': 0,
+  bottlecap: 1,
+  bottle: 2,
+  cup: 3,
+  plate: 4,
+}
 
 const TrashFilter = ({
   trashFilter,
@@ -256,33 +266,42 @@ const TrashFilter = ({
   )
 }
 
-const SideBar = ({onApplyAlgorithm = () => {}, onTrashFilterChange = () => {}, filter, ...props}) => {
+const SideBar = ({
+  onApplyAlgorithm = () => {},
+  onTrashFilterChange = () => {},
+  filter,
+  ...props
+}) => {
   const [algo, setAlgo] = useState('DBSCAN')
   const [args, setArgs] = useState([0.0005, 1])
   const [trashFilter, setTrashFilter] = useState(filter)
 
   useEffect(() => {
     setTrashFilter(filter)
-  }, [filter])  
+  }, [filter])
 
   const applyAlgorithm = useCallback(async () => {
     let res = await getClustering(algo, args)
     onApplyAlgorithm(res)
   }, [algo, args])
 
-  const onAlgoChange = useCallback(async (algo) => {
-    if (algo === "KMEANS")
-      setArgs([3])
-    else
-      setArgs([0.0005, 1])
-    
-      setAlgo(algo)
-  }, [setArgs, setAlgo])
+  const onAlgoChange = useCallback(
+    async (algo) => {
+      if (algo === 'KMEANS') setArgs([3])
+      else setArgs([0.0005, 1])
 
-  const applyTrashFilter = useCallback((filter) => {
-    setTrashFilter(filter)
-    onTrashFilterChange(filter)
-  }, [trashFilter, setTrashFilter])
+      setAlgo(algo)
+    },
+    [setArgs, setAlgo]
+  )
+
+  const applyTrashFilter = useCallback(
+    (filter) => {
+      setTrashFilter(filter)
+      onTrashFilterChange(filter)
+    },
+    [trashFilter, setTrashFilter]
+  )
 
   return (
     <Flex
@@ -290,40 +309,56 @@ const SideBar = ({onApplyAlgorithm = () => {}, onTrashFilterChange = () => {}, f
         height: '100%',
         width: ['50%', '40%', '25%'],
         padding: 5,
-        bg: "#f8f9fa"
+        bg: '#f8f9fa',
       }}
       {...props}
     >
-      <Box sx={{ width: '100%' }}>
-        <Heading
-          sx={{
-            fontSize: [3, 5, 7],
-            cursor: 'pointer',
-            pb: 3,
-          }}
-          as='h1'
-        >
-          Fresh.
-        </Heading>
-        <AlgoBox algo={algo} onAlgoChange={onAlgoChange} />
-        <ArgumentBox
-          algo={algo}
-          algoArgs={args}
-          sx={{ mt: 3 }}
-          onArgumentChange={setArgs}
-        />
-        <TrashFilter
-          trashFilter={trashFilter}
-          sx={{ mt: 3 }}
-          onTrashFilterCallback={applyTrashFilter}
-        />
-        <Button sx={{ mt: 4, width: '100%' }} variant='secondary' onClick={() => {applyAlgorithm()}}>
-          Apply Algorithm
-        </Button>
-      </Box>
+      <motion.div style={{width: '100%'}} initial='initial' animate='animate' exit='exit' variants={staggerAnimation}>
+        <motion.div variant={fadeInUp()}>
+          <Heading
+            sx={{
+              fontSize: [3, 5, 7],
+              cursor: 'pointer',
+              pb: 3,
+            }}
+            as='h1'
+          >
+            Fresh.
+          </Heading>
+        </motion.div>
+        <motion.div variants ={fadeInUp()}>
+          <AlgoBox algo={algo} onAlgoChange={onAlgoChange} />
+        </motion.div>
+        <motion.div variants={fadeInUp()}>
+          <ArgumentBox
+            algo={algo}
+            algoArgs={args}
+            sx={{ mt: 3 }}
+            onArgumentChange={setArgs}
+          />
+        </motion.div>
+        <motion.div variants={fadeInUp()}>
+          <TrashFilter
+            trashFilter={trashFilter}
+            sx={{ mt: 3 }}
+            onTrashFilterCallback={applyTrashFilter}
+          />
+        </motion.div>
+        <motion.div variants={fadeInUp()}>
+          <Button
+            sx={{ mt: 4, width: '100%' }}
+            variant='secondary'
+            onClick={() => {
+              applyAlgorithm()
+            }}
+          >
+            Apply Algorithm
+          </Button>
+        </motion.div>
+      </motion.div>
     </Flex>
   )
-} 
+}
 
 // markup
 const IndexPage = () => {
@@ -348,40 +383,51 @@ const IndexPage = () => {
         width: '100%',
         flexDirection: 'row',
         background: 'background',
-        margin: 0, 
+        margin: 0,
       }}
     >
-      <SideBar filter={filter} onTrashFilterChange={setFilter} onApplyAlgorithm={setClusters} />
+      <SideBar
+        filter={filter}
+        onTrashFilterChange={setFilter}
+        onApplyAlgorithm={setClusters}
+      />
       <Box sx={{ height: '100%', width: '100%' }}>
-        {!!coords && <GoogleMapReact
-          bootstrapURLKeys={{ key }}
-          center={center}
-          defaultZoom={18}
-        >
-          {(!!coords && !clusters) && 
-            coords.filter((obj) => filter[filterListToInd[obj.label]]).map(({lat, lng, label, id, imagePath}, i) => (
-              <Marker
-                key={i}
-                lat={lat}
-                lng={lng}
-                label={label}
-                id={id}
-                imagePath={imagePath}
-              />
-            ))}
-            {!!clusters && 
-              clusters.filter((obj) => filter[filterListToInd[obj.label]]).map(({lat, lng, label, id, clusterID, imagePath}, i) => (
-                <Marker
-                  key={i}
-                  lat={lat}
-                  lng={lng}
-                  // label={label}
-                  id={id}
-                  clusterID={clusterID}
-                  imagePath={imagePath}
-                />
-            ))}
-        </GoogleMapReact>}
+        {!!coords && (
+          <GoogleMapReact
+            bootstrapURLKeys={{ key }}
+            center={center}
+            defaultZoom={18}
+          >
+            {!!coords &&
+              !clusters &&
+              coords
+                .filter((obj) => filter[filterListToInd[obj.label]])
+                .map(({ lat, lng, label, id, imagePath }, i) => (
+                  <Marker
+                    key={i}
+                    lat={lat}
+                    lng={lng}
+                    label={label}
+                    id={id}
+                    imagePath={imagePath}
+                  />
+                ))}
+            {!!clusters &&
+              clusters
+                .filter((obj) => filter[filterListToInd[obj.label]])
+                .map(({ lat, lng, label, id, clusterID, imagePath }, i) => (
+                  <Marker
+                    key={i}
+                    lat={lat}
+                    lng={lng}
+                    // label={label}
+                    id={id}
+                    clusterID={clusterID}
+                    imagePath={imagePath}
+                  />
+                ))}
+          </GoogleMapReact>
+        )}
       </Box>
     </Flex>
   )
