@@ -40,6 +40,9 @@ This is a hackathon; we got ~24 hours (some of which I'd like to use for sleep),
 # sheeeesh UI looking clean 😳😳😳
 thanks *we* made it 😎
 
+# lmfao why's its called fresh?
+because we are braindead high schoolers that kinad just pulled the first word we could think of
+
 [Figma Link](https://www.figma.com/file/QV2Isnrmc7lPy8rwxMTWh2/fresh?node-id=0%3A1)
 
 # Screenshots
