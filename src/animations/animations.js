@@ -1,22 +1,22 @@
-export const fadeInUp = ({duration, y} = {}) => ({
-    initial: {
-      y: y ?? 20,
-      opacity: 0,
+export const fadeInUp = ({ duration, y } = {}) => ({
+  initial: {
+    y: y ?? 20,
+    opacity: 0,
+  },
+  animate: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: duration,
     },
-    animate: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: duration,
-      }
-    },
-    exit: {
-      y: y ?? 20,
-      opacity: 0,
-    }
-  })
+  },
+  exit: {
+    y: y ?? 20,
+    opacity: 0,
+  },
+})
 
-export const fadeInDown = ({duration, y} = {}) => ({
+export const fadeInDown = ({ duration, y } = {}) => ({
   initial: {
     y: y ?? -20,
     opacity: 0,
@@ -26,15 +26,15 @@ export const fadeInDown = ({duration, y} = {}) => ({
     opacity: 1,
     transition: {
       duration: duration,
-    }
+    },
   },
   exit: {
     y: y ?? -20,
     opacity: 0,
-  }
+  },
 })
 
-export const fadeInRight = ({duration, x} = {}) => ({
+export const fadeInRight = ({ duration, x } = {}) => ({
   initial: {
     x: x ?? -20,
     opacity: 0,
@@ -44,18 +44,18 @@ export const fadeInRight = ({duration, x} = {}) => ({
     opacity: 1,
     transition: {
       duration: duration,
-    }
+    },
   },
   exit: {
     x: x ?? -20,
     opacity: 0,
-  }
+  },
 })
-  
+
 export const staggerAnimation = {
   animate: {
     transition: {
-      staggerChildren: 0.05
-    }
-  }
+      staggerChildren: 0.05,
+    },
+  },
 }
