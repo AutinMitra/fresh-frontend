@@ -1,6 +1,8 @@
 # Fresh    
 #### By Autin Mitra, Andrew Lam, Andrew Xie, and David Liu     
 
+⭐ hacktj best mobile winner, nice
+
 ## What is Fresh?
 Fresh is a tool that is used to record and display locations of trash found outside.    
 
